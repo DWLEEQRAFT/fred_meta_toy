@@ -40,11 +40,9 @@ if __name__ == '__main__':
         ticker_info = fred.get_series_info(ticker)
         ticker_info_df = pd.DataFrame(ticker_info)
         ticker_info_df = ticker_info_df.transpose()
+        ticker_info_df.set_index
         #스키마 오류 때문에 csv로 변경해서 시도
         ticker_info_df.to_csv("./temp/temp.csv")
-
-
-
 
         client.load_table_from_dataframe("./temp/temp.csv", 'innate-plexus-345505.fred.fred_meta', job_config=job_config).result()
         print(ticker)
