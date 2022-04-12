@@ -9,11 +9,10 @@ from google.oauth2 import service_account
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     key_path = glob.glob("./config/*.json")[0]
-
     credentials = service_account.Credentials.from_service_account_file(key_path)
-
     client = bigquery.Client(credentials=credentials,
                              project=credentials.project_id)
+
     fred = Fred(api_key='51539bf992c74d576a870219fb703109')
 
 
@@ -34,14 +33,20 @@ if __name__ == '__main__':
                bigquery.SchemaField("popularity", "STRING"),
                bigquery.SchemaField("notes", "STRING"),
               ]
-    job_config = bigquery.LoadJobConfig(schema=schema, write_disposition="WRITE_APPEND")
+    #스키마 오류 때문에 소스 포맷 csv로 추가해서 csv 생성해서 업로드 시도해봄
+    job_config = bigquery.LoadJobConfig(schema=schema, autodetect=False, write_disposition="WRITE_APPEND", source_format=bigquery.SourceFormat.CSV)
 
     for ticker in tickers:
         ticker_info = fred.get_series_info(ticker)
         ticker_info_df = pd.DataFrame(ticker_info)
         ticker_info_df = ticker_info_df.transpose()
+        #스키마 오류 때문에 csv로 변경해서 시도
+        ticker_info_df.to_csv("./temp/temp.csv")
 
-        client.load_table_from_dataframe(ticker_info_df, 'innate-plexus-345505.fred.fred_meta', job_config=job_config).result()
+
+
+
+        client.load_table_from_dataframe("./temp/temp.csv", 'innate-plexus-345505.fred.fred_meta', job_config=job_config).result()
         print(ticker)
 
     # ticker_info = fred.get_series_info(ticker)
