@@ -34,18 +34,33 @@ if __name__ == '__main__':
                bigquery.SchemaField("notes", "STRING"),
               ]
     #스키마 오류 때문에 소스 포맷 csv로 추가해서 csv 생성해서 업로드 시도해봄
+
     job_config = bigquery.LoadJobConfig(schema=schema, autodetect=False, write_disposition="WRITE_APPEND", source_format=bigquery.SourceFormat.CSV)
 
     for ticker in tickers:
         ticker_info = fred.get_series_info(ticker)
         ticker_info_df = pd.DataFrame(ticker_info)
         ticker_info_df = ticker_info_df.transpose()
-        ticker_info_df.set_index
-        #스키마 오류 때문에 csv로 변경해서 시도
-        ticker_info_df.to_csv("./temp/temp.csv")
 
-        client.load_table_from_dataframe("./temp/temp.csv", 'innate-plexus-345505.fred.fred_meta', job_config=job_config).result()
-        print(ticker)
+        temp_val = ticker_info_df.columns
+        #스키마 오류 때문에 csv로 변경해서 시도
+        table_id = f"innate-plexus-345505.fred.fred_meta"
+        file = f"./temp/temp.csv"
+        ticker_info_df.to_csv(file)
+
+        with open(file, "rb") as source_file:
+            print(source_file)
+            client.load_table_from_file(source_file, table_id, job_config=job_config)
+            table = client.get_table(table_id)
+            print(
+                "Loaded {} rows and {} columns to {}".format(
+                    table.num_rows, len(table.schema), table_id
+                )
+            )
+
+        #client.load_table_from_dataframe("./temp/temp.csv", 'innate-plexus-345505.fred.fred_meta', job_config=job_config).result()
+
+            print(ticker)
 
     # ticker_info = fred.get_series_info(ticker)
     # ticker_info_df = pd.DataFrame(ticker_info)
@@ -53,10 +68,10 @@ if __name__ == '__main__':
     sql = f"""
         SELECT  realtime_start
         FROM    innate-plexus-345505.fred.fred_meta
-        WHERE   id = @id
+        WHERE   id = 'GDPPOT'
 
         """
-    bigquery.ScalarQueryParameter('id', 'STRING', ticker)
+    #bigquery.ScalarQueryParameter('id', 'STRING', ticker)
     query_job = client.query(sql)
     fred_df = query_job.to_dataframe()
 
